@@ -10,6 +10,8 @@ interface UiState {
   receiptOrderId: string | null;
   restock: { open: boolean; target: RestockTarget | null };
   ragOpen: boolean;
+  /** Trace to show in the RAG Explorer; null means "latest". */
+  ragTraceId: string | null;
   assistantOpen: boolean;
   orderSheetOpen: boolean;
   setCategory: (c: MenuCategory | "all") => void;
@@ -18,6 +20,7 @@ interface UiState {
   openRestock: (target?: RestockTarget | null) => void;
   closeRestock: () => void;
   setRagOpen: (open: boolean) => void;
+  openRag: (traceId?: string | null) => void;
   setAssistantOpen: (open: boolean) => void;
   setOrderSheetOpen: (open: boolean) => void;
 }
@@ -27,6 +30,7 @@ export const useUi = create<UiState>((set) => ({
   receiptOrderId: null,
   restock: { open: false, target: null },
   ragOpen: false,
+  ragTraceId: null,
   assistantOpen: false,
   orderSheetOpen: false,
   setCategory: (category) => set({ category }),
@@ -34,7 +38,8 @@ export const useUi = create<UiState>((set) => ({
   closeReceipt: () => set({ receiptOrderId: null }),
   openRestock: (target = null) => set({ restock: { open: true, target } }),
   closeRestock: () => set((s) => ({ restock: { ...s.restock, open: false } })),
-  setRagOpen: (ragOpen) => set({ ragOpen }),
+  setRagOpen: (ragOpen) => set(ragOpen ? { ragOpen, ragTraceId: null } : { ragOpen }),
+  openRag: (ragTraceId = null) => set({ ragOpen: true, ragTraceId }),
   setAssistantOpen: (assistantOpen) => set({ assistantOpen }),
   setOrderSheetOpen: (orderSheetOpen) => set({ orderSheetOpen }),
 }));

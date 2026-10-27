@@ -26,6 +26,8 @@ import { applyConsumption, describeAmount, restockAmount, worsenedStatuses, type
 import { createPendingOrder, preflightCart, processOrder, PAYMENT_LABELS } from "@/lib/order-engine";
 import { buildPlan, canStartCleaning, cleaningConsumption, getReadiness } from "@/lib/machine-engine";
 import { formatINR, formatQty } from "@/lib/currency";
+import { runAssistantQuery } from "@/lib/assistant/pipeline";
+import type { QueryTrace } from "@/lib/assistant/types";
 
 export type RestockTarget = { type: "resource"; id: ResourceId } | { type: "packaged"; id: string };
 
@@ -35,7 +37,20 @@ export interface ActionResult {
   details?: string[];
 }
 
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  at: number;
+  /** Assistant replies stay "typing" until this time. */
+  revealAt?: number;
+  traceId?: string;
+}
+
 interface DataState {
+  chat: ChatMessage[];
+  traces: Record<string, QueryTrace>;
+  lastTraceId: string | null;
   inventory: Inventory;
   packaged: PackagedInventory;
   orders: Order[];
@@ -73,12 +88,17 @@ interface Actions {
   restock: (target: RestockTarget, amount: number) => ActionResult & { result?: RestockResult };
   setThreshold: (target: RestockTarget, threshold: number) => void;
   resetDemo: () => void;
+
+  ask: (query: string) => string | null;
+  clearChat: () => void;
 }
 
 export type BrewStore = DataState & Actions;
 
 const MAX_EVENTS = 150;
 const MAX_ORDERS = 150;
+const MAX_CHAT = 40;
+let querySeq = 0;
 
 const initialMachine = (): MachineSnapshot => ({
   state: "IDLE",
@@ -99,6 +119,9 @@ function makeEvent(level: EventLevel, kind: EventKind, message: string, at = Dat
 function initialData(settings?: Settings): DataState {
   const now = Date.now();
   return {
+    chat: [],
+    traces: {},
+    lastTraceId: null,
     inventory: structuredClone(INITIAL_INVENTORY),
     packaged: structuredClone(INITIAL_PACKAGED),
     orders: [],
@@ -446,6 +469,35 @@ export const useBrewStore = create<BrewStore>()(
         resetDemo: () => {
           set({ ...initialData(get().settings), view: "pos" });
         },
+
+        // ── BREW AI ───────────────────────────────────────────────────────────
+        ask: (query) => {
+          const text = query.trim().slice(0, 300);
+          if (!text) return null;
+          const s = get();
+          const now = Date.now();
+          querySeq += 1;
+          const id = `Q-${now.toString(36).toUpperCase()}-${querySeq}`;
+          // Same pipeline as the RAG Explorer, fed the live shared state.
+          const trace = runAssistantQuery(
+            text,
+            { inventory: s.inventory, packaged: s.packaged, machine: s.machine, orders: s.orders, lastRejection: s.lastRejection, speed: s.settings.speed },
+            now,
+            id,
+          );
+          const typingMs = 650 + Math.min(900, trace.answer.length * 3);
+          const chat = [
+            ...s.chat,
+            { id: `${id}-u`, role: "user" as const, text, at: now },
+            { id: `${id}-a`, role: "assistant" as const, text: trace.answer, at: now + typingMs, revealAt: now + typingMs, traceId: id },
+          ].slice(-MAX_CHAT);
+          const keep = new Set(chat.map((m) => m.traceId).filter(Boolean));
+          const traces = Object.fromEntries(Object.entries({ ...s.traces, [id]: trace }).filter(([k]) => keep.has(k)));
+          set({ chat, traces, lastTraceId: id });
+          return id;
+        },
+
+        clearChat: () => set({ chat: [], traces: {}, lastTraceId: null }),
       };
     },
     {
@@ -454,6 +506,9 @@ export const useBrewStore = create<BrewStore>()(
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       partialize: (s) => ({
+        chat: s.chat,
+        traces: s.traces,
+        lastTraceId: s.lastTraceId,
         inventory: s.inventory,
         packaged: s.packaged,
         orders: s.orders,

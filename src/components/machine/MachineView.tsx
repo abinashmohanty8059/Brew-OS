@@ -5,6 +5,7 @@ import { MACHINE } from "@/data/config";
 import { VendingMachine } from "./VendingMachine";
 import { PreparationPanel } from "./PreparationPanel";
 import { CleaningMode } from "./CleaningMode";
+import { BrewAssistant } from "@/components/assistant/BrewAssistant";
 
 export function MachineView() {
   return (
@@ -29,7 +30,10 @@ export function MachineView() {
           transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
         >
           <PreparationPanel />
-          <CleaningMode />
+          <div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <CleaningMode className="2xl:self-start" />
+            <BrewAssistant className="h-[520px]" />
+          </div>
         </motion.div>
       </div>
     </div>
