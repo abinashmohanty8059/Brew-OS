@@ -6,10 +6,10 @@ import type { ResourceId } from "@/types";
 import { useBrewStore } from "@/store/machine-store";
 import { getProduct } from "@/data/products";
 import { SUGAR_GRAMS, SUGAR_LABELS, SUGAR_ORDER } from "@/data/config";
-import { computeConsumption } from "@/lib/inventory-engine";
+import { computeConsumption, describeAmount } from "@/lib/inventory-engine";
 import { buildOrderLines, makeOrderId, orderTotals, preflightCart } from "@/lib/order-engine";
 import { getReadiness } from "@/lib/machine-engine";
-import { formatINR, formatQty } from "@/lib/currency";
+import { formatINR } from "@/lib/currency";
 import { ProductArt } from "@/components/product/ProductArt";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { Button, IconButton } from "@/components/ui/Button";
@@ -148,7 +148,7 @@ export function OrderPanel({ onCheckout, className }: { onCheckout: () => void; 
             <p className="eyebrow mb-1.5">Will use on payment</p>
             <p className="font-mono text-[10.5px] leading-relaxed text-faint">
               {(Object.entries(consumption.resources) as Array<[ResourceId, number]>)
-                .map(([id, qty]) => `${formatQty(qty, inventory[id].unit)} ${inventory[id].label.toLowerCase().replace("disposable ", "")}`)
+                .map(([id, qty]) => describeAmount(inventory[id], qty))
                 .join(" · ")}
             </p>
           </div>

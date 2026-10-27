@@ -22,7 +22,7 @@ import type {
 import { INITIAL_INVENTORY, INITIAL_PACKAGED } from "@/data/initial-inventory";
 import { CLEANING, SUGAR_LABELS } from "@/data/config";
 import { getProduct } from "@/data/products";
-import { applyConsumption, restockAmount, worsenedStatuses, type RestockResult } from "@/lib/inventory-engine";
+import { applyConsumption, describeAmount, restockAmount, worsenedStatuses, type RestockResult } from "@/lib/inventory-engine";
 import { createPendingOrder, preflightCart, processOrder, PAYMENT_LABELS } from "@/lib/order-engine";
 import { buildPlan, canStartCleaning, cleaningConsumption, getReadiness } from "@/lib/machine-engine";
 import { formatINR, formatQty } from "@/lib/currency";
@@ -273,7 +273,7 @@ export const useBrewStore = create<BrewStore>()(
           });
 
           const used = Object.entries(result.order.consumption?.resources ?? {})
-            .map(([id, qty]) => formatQty(qty, state.inventory[id as ResourceId].unit) + " " + state.inventory[id as ResourceId].label.toLowerCase())
+            .map(([id, qty]) => describeAmount(state.inventory[id as ResourceId], qty))
             .join(", ");
           log([
             makeEvent("success", "payment", `${order.id} paid · ${formatINR(order.total)} via ${PAYMENT_LABELS[order.paymentMethod ?? "upi"]}`, now),
