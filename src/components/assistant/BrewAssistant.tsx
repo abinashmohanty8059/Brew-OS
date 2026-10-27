@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
 import { Bot, Eraser, Network, SendHorizontal, X } from "lucide-react";
 import { useBrewStore } from "@/store/machine-store";
@@ -32,8 +32,12 @@ export function BrewAssistant({ className, autoFocus = false, onClose }: { class
   const listRef = useRef<HTMLOListElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const now = useRevealClock(Math.max(0, ...chat.map((m) => m.revealAt ?? 0)));
-  const typing = chat.some((m) => m.revealAt && m.revealAt > now);
+  const now = useRevealClock(Math.max(0, ...chat.map((m) => m.streamEndAt ?? m.revealAt ?? 0)));
+  const typing = chat.some((m) => (m.streamEndAt ?? m.revealAt ?? 0) > now);
+  const followStream = useCallback(() => {
+    const el = listRef.current;
+    if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 120) el.scrollTop = el.scrollHeight;
+  }, []);
   const askedTexts = new Set(chat.filter((m) => m.role === "user").map((m) => m.text));
   const suggestions = SAMPLE_QUESTIONS.filter((q) => !askedTexts.has(q)).slice(0, chat.length ? 3 : 6);
 
@@ -69,7 +73,7 @@ export function BrewAssistant({ className, autoFocus = false, onClose }: { class
             <h2 id="brewai-title" className="text-[13.5px] font-semibold tracking-[0.02em]">
               BREW AI
             </h2>
-            <p className="font-mono text-[10px] text-faint">{typing ? "retrieving · composing…" : "offline · local knowledge · live machine data"}</p>
+            <p className="font-mono text-[10px] text-faint">{typing ? "retrieving · generating…" : "offline · local knowledge · live machine data"}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -96,7 +100,7 @@ export function BrewAssistant({ className, autoFocus = false, onClose }: { class
         )}
         <AnimatePresence initial={false}>
           {chat.map((m) => (
-            <ChatMessage key={m.id} message={m} typing={Boolean(m.revealAt && m.revealAt > now)} />
+            <ChatMessage key={m.id} message={m} onStream={followStream} />
           ))}
         </AnimatePresence>
       </ol>

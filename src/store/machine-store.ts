@@ -42,8 +42,10 @@ export interface ChatMessage {
   role: "user" | "assistant";
   text: string;
   at: number;
-  /** Assistant replies stay "typing" until this time. */
+  /** Assistant replies show a "thinking" indicator until this time, then stream. */
   revealAt?: number;
+  /** When the streamed reply has fully appeared. */
+  streamEndAt?: number;
   traceId?: string;
 }
 
@@ -485,11 +487,21 @@ export const useBrewStore = create<BrewStore>()(
             now,
             id,
           );
-          const typingMs = 650 + Math.min(900, trace.answer.length * 3);
+          // Paced like an LLM: a short "retrieving" pause, then token-by-token streaming.
+          const thinkingMs = 700 + Math.min(600, trace.retrieval.top.length * 150);
+          const streamMs = Math.min(9000, Math.max(1200, trace.answer.length * 22));
           const chat = [
             ...s.chat,
             { id: `${id}-u`, role: "user" as const, text, at: now },
-            { id: `${id}-a`, role: "assistant" as const, text: trace.answer, at: now + typingMs, revealAt: now + typingMs, traceId: id },
+            {
+              id: `${id}-a`,
+              role: "assistant" as const,
+              text: trace.answer,
+              at: now + thinkingMs,
+              revealAt: now + thinkingMs,
+              streamEndAt: now + thinkingMs + streamMs,
+              traceId: id,
+            },
           ].slice(-MAX_CHAT);
           const keep = new Set(chat.map((m) => m.traceId).filter(Boolean));
           const traces = Object.fromEntries(Object.entries({ ...s.traces, [id]: trace }).filter(([k]) => keep.has(k)));
