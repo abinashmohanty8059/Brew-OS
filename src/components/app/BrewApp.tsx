@@ -10,6 +10,7 @@ import { MachineDriver } from "@/components/machine/MachineDriver";
 import { OperatorDashboard } from "@/components/dashboard/OperatorDashboard";
 import { RestockDialog } from "@/components/inventory/RestockDialog";
 import { AssistantDrawer } from "@/components/assistant/AssistantDrawer";
+import { RagExplorer } from "@/components/rag/RagExplorer";
 import { Toaster } from "@/components/ui/Toaster";
 import { BrandMark, Wordmark } from "./BrandMark";
 import { StatusStrip } from "./StatusStrip";
@@ -98,6 +99,7 @@ export function BrewApp() {
       <ReceiptDialog />
       <RestockDialog />
       <AssistantDrawer />
+      <RagExplorer />
       <Toaster />
     </MotionConfig>
   );

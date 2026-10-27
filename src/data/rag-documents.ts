@@ -28,7 +28,7 @@ export function ingredientList(drink: PreparedDrink): string {
 }
 
 function recipeDoc(drink: PreparedDrink): RagDocument {
-  const steps = drink.steps.map((s, i) => `${i + 1}. ${s.label}: ${s.detail}.`).join(" ");
+  const steps = drink.steps.map((s, i) => `(${i + 1}) ${s.label.toLowerCase()}, ${s.detail}`).join("; ") + ".";
   const isCoffee = Boolean(drink.recipe.coffee);
   return {
     id: `RCP-${drink.id.toUpperCase()}`,
