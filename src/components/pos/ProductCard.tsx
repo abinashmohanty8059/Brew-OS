@@ -22,6 +22,13 @@ const INGREDIENT_SHORT: Record<string, string> = {
   sugar: "sugar",
 };
 
+/** The ingredient that best distinguishes a drink on a small card, e.g. "120ml milk". */
+function signatureIngredient(recipe: Partial<Record<string, number>>): string {
+  const pick = ["chocolate", "milk", "spice", "tea", "water", "coffee"].find((id) => recipe[id]);
+  if (!pick) return "";
+  return `${recipe[pick]}${pick === "milk" || pick === "water" ? "ml" : "g"} ${INGREDIENT_SHORT[pick]}`;
+}
+
 export function StrengthMeter({ value, className }: { value: number; className?: string }) {
   return (
     <span className={cn("inline-flex items-end gap-[3px]", className)} role="img" aria-label={`Strength ${value} of 5`}>
@@ -119,12 +126,7 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
                   <Timer className="size-3" aria-hidden />
                   {Math.round(product.prepSeconds)}s
                 </span>
-                <span className="truncate">
-                  {Object.entries(product.recipe)
-                    .slice(0, 2)
-                    .map(([id, qty]) => `${qty}${id === "milk" || id === "water" ? "ml" : "g"} ${INGREDIENT_SHORT[id]}`)
-                    .join(" · ")}
-                </span>
+                <span className="truncate">{signatureIngredient(product.recipe)}</span>
               </div>
             ) : (
               <span className="font-mono text-[10.5px] text-faint">

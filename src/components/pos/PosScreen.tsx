@@ -25,12 +25,12 @@ function PosHero() {
   return (
     <header className="relative mb-8 flex flex-col gap-6 overflow-hidden rounded-2xl border border-white/[0.06] bg-[radial-gradient(90%_140%_at_100%_0%,rgba(201,154,106,0.14),transparent_55%),linear-gradient(180deg,#121215,#0c0c0e)] p-6 sm:p-8 md:flex-row md:items-end md:justify-between">
       <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-crema/10 blur-3xl" />
-      <div className="relative max-w-xl">
+      <div className="relative max-w-2xl">
         <p className="eyebrow mb-3">
           {MACHINE.model} · {MACHINE.location}
         </p>
         <h1 className="font-display text-[40px] leading-[0.95] tracking-[-0.02em] text-ivory sm:text-[52px]">
-          Intelligence in <em className="text-crema">every pour.</em>
+          Intelligence in <em className="whitespace-nowrap text-crema">every pour.</em>
         </h1>
         <p className="mt-3 max-w-md text-[13.5px] leading-relaxed text-mute">
           Choose a drink, pay with a simulated UPI, card or cash flow, then watch the machine grind, brew and dispense it — with
