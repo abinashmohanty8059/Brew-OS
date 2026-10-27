@@ -8,6 +8,7 @@ import { ReceiptDialog } from "@/components/pos/ReceiptDialog";
 import { MachineView } from "@/components/machine/MachineView";
 import { MachineDriver } from "@/components/machine/MachineDriver";
 import { OperatorDashboard } from "@/components/dashboard/OperatorDashboard";
+import { RestockDialog } from "@/components/inventory/RestockDialog";
 import { Toaster } from "@/components/ui/Toaster";
 import { BrandMark, Wordmark } from "./BrandMark";
 import { StatusStrip } from "./StatusStrip";
@@ -94,6 +95,7 @@ export function BrewApp() {
       <MachineDriver />
       <SystemNotifier />
       <ReceiptDialog />
+      <RestockDialog />
       <Toaster />
     </MotionConfig>
   );
