@@ -221,6 +221,12 @@ export function productAvailability(
   };
 }
 
+/** "120 ml milk", "3 cups" — a quantity with its resource name, without repeating the unit. */
+export function describeAmount(level: Pick<ResourceLevel, "id" | "label" | "unit">, qty: number): string {
+  if (level.id === "cups") return formatQty(qty, "cups");
+  return `${formatQty(qty, level.unit)} ${level.label.toLowerCase()}`;
+}
+
 export function emptyConsumption(): Consumption {
   return { resources: {}, packaged: {} };
 }
