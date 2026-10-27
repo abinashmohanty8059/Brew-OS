@@ -12,7 +12,6 @@ export function defineDrink(drink: Omit<PreparedDrink, "kind" | "prepSeconds" | 
 
 const ESPRESSO_BROWN = "#3b2216";
 const CREMA = "#b07a4c";
-const MILK = "#efe4d2";
 const FOAM = "#f6efe3";
 
 /* ──────────────────────────────────────────────────────────────
