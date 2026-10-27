@@ -41,7 +41,11 @@ function PosHero() {
         <div className="bg-ink-900/90 px-4 py-3">
           <dt className="eyebrow">Machine</dt>
           <dd className="mt-1.5 text-[13px]">
-            <Signal tone={readiness.canOrder ? "lime" : meta.tone} label={readiness.canOrder ? "Ready" : meta.label} pulse={!readiness.canOrder} />
+            <Signal
+              tone={readiness.canBrew ? "lime" : readiness.canOrder ? "amber" : meta.tone}
+              label={readiness.canBrew ? "Ready" : readiness.canOrder ? "Snacks only" : meta.label}
+              pulse={!readiness.canBrew}
+            />
           </dd>
         </div>
         <div className="bg-ink-900/90 px-4 py-3">

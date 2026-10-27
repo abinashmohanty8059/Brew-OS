@@ -46,7 +46,15 @@ export function StatusStrip() {
           )}
           aria-hidden
         />
-        <span className="uppercase tracking-[0.12em] text-ivory-dim">{readiness.canBrew ? "Ready to dispense" : STATE_META[machine.state].label}</span>
+        <span className="uppercase tracking-[0.12em] text-ivory-dim">
+          {readiness.canBrew
+            ? "Ready to dispense"
+            : readiness.canOrder
+              ? inventory.cups.quantity <= 0
+                ? "No cups · snacks only"
+                : "Drinks unavailable"
+              : STATE_META[machine.state].label}
+        </span>
       </span>
       <span className="h-4 w-px shrink-0 bg-white/10" />
 
