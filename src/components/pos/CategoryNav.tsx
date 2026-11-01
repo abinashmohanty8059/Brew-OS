@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Coffee, CupSoda, GlassWater, Leaf, Milk, Sparkles, Sandwich, LayoutGrid, Receipt } from "lucide-react";
+import { Coffee, CupSoda, Droplet, GlassWater, Leaf, Milk, Sparkles, LayoutGrid, Receipt } from "lucide-react";
 import type { MenuCategory } from "@/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/data/config";
 import { PRODUCTS } from "@/data/products";
@@ -19,7 +19,7 @@ const ICONS: Record<MenuCategory | "all", typeof Coffee> = {
   specialty: Sparkles,
   cold: CupSoda,
   tea: Leaf,
-  pantry: Sandwich,
+  pantry: Droplet,
 };
 
 const ITEMS: Array<MenuCategory | "all"> = ["all", ...CATEGORY_ORDER];

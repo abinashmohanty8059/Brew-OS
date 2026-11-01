@@ -124,11 +124,6 @@ export const PRODUCT_ALIASES: Record<string, string[]> = {
   "green-tea": ["green tea"],
   "lemon-tea": ["lemon tea"],
   "bottled-water": ["bottled water", "water bottle", "mineral water"],
-  "chocolate-bar": ["chocolate bar", "choco bar", "candy bar"],
-  cookies: ["cookies", "cookie", "oat cookies"],
-  croissant: ["croissant", "croissants"],
-  muffin: ["muffin", "muffins", "blueberry muffin"],
-  sandwich: ["sandwich", "sandwiches", "paneer sandwich"],
 };
 
 export const INGREDIENT_ALIASES: Record<ResourceId, string[]> = {

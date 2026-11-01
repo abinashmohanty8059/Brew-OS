@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { CakeSlice, Candy, Cookie, Croissant, Milk, Sandwich } from "lucide-react";
+import { Milk } from "lucide-react";
 import type { DrinkVisual, PackagedIcon, Product, VesselType } from "@/types";
 import { cn } from "@/lib/cn";
 
@@ -205,11 +205,6 @@ export function DrinkArt({ visual, hot = true, animated = false, className, fill
 
 const PACKAGED_ICONS: Record<PackagedIcon, typeof Milk> = {
   water: Milk,
-  chocolate: Candy,
-  cookie: Cookie,
-  croissant: Croissant,
-  muffin: CakeSlice,
-  sandwich: Sandwich,
 };
 
 export function PackagedArt({ icon, accent, className }: { icon: PackagedIcon; accent: string; className?: string }) {

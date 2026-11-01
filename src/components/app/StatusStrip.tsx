@@ -51,7 +51,7 @@ export function StatusStrip() {
             ? "Ready to dispense"
             : readiness.canOrder
               ? inventory.cups.quantity <= 0
-                ? "No cups · snacks only"
+                ? "No cups · bottled only"
                 : "Drinks unavailable"
               : STATE_META[machine.state].label}
         </span>

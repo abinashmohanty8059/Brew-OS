@@ -534,12 +534,17 @@ export const useBrewStore = create<BrewStore>()(
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<DataState>;
-        // Fall back to fresh defaults for any resource missing from older saves.
+        // Fall back to fresh defaults for any resource missing from older saves,
+        // and drop stock or cart lines for products no longer on the menu.
+        const packaged = Object.fromEntries(
+          Object.entries({ ...current.packaged, ...(p.packaged ?? {}) }).filter(([id]) => id in current.packaged),
+        );
         return {
           ...current,
           ...p,
+          cart: (p.cart ?? []).filter((l) => getProduct(l.productId)),
           inventory: { ...current.inventory, ...(p.inventory ?? {}) },
-          packaged: { ...current.packaged, ...(p.packaged ?? {}) },
+          packaged,
           settings: { ...current.settings, ...(p.settings ?? {}) },
         };
       },

@@ -20,7 +20,7 @@ function sectionsFor(category: ReturnType<typeof useUi.getState>["category"]): S
       {
         id: category,
         title: CATEGORY_LABELS[category],
-        subtitle: category === "pantry" ? "Packaged items — vended from spiral stock, no cup required" : "Brewed to recipe on demand",
+        subtitle: category === "pantry" ? "Chilled bottles — vended from stock, no cup required" : "Brewed to recipe on demand",
         products: PRODUCTS.filter((p) => p.category === category),
       },
     ];
@@ -47,7 +47,7 @@ function sectionsFor(category: ReturnType<typeof useUi.getState>["category"]): S
     {
       id: "pantry",
       title: CATEGORY_LABELS.pantry,
-      subtitle: "Packaged items — vended from spiral stock, no cup required",
+      subtitle: "Chilled bottles — vended from stock, no cup required",
       products: PRODUCTS.filter((p) => p.category === "pantry"),
     },
   ];

@@ -40,9 +40,9 @@ describe("inventory engine", () => {
   });
 
   it("packaged items use unit stock and no cups", () => {
-    const c = computeConsumption([line("cookies", 2, null), line("bottled-water", 1, null)]);
+    const c = computeConsumption([line("bottled-water", 3, null)]);
     expect(c.resources).toEqual({});
-    expect(c.packaged).toEqual({ cookies: 2, "bottled-water": 1 });
+    expect(c.packaged).toEqual({ "bottled-water": 3 });
   });
 
   it("refuses to deduct anything when one resource is short (no partial deduction)", () => {
@@ -61,11 +61,11 @@ describe("inventory engine", () => {
     expect(resourceStatus({ quantity: 11, lowThreshold: 10, criticalThreshold: 3 })).toBe("normal");
   });
 
-  it("disables drinks but not packaged items when cups run out", () => {
+  it("disables prepared drinks but not bottled water when cups run out", () => {
     const i = inv();
     i.cups.quantity = 0;
     expect(productAvailability(PRODUCT_MAP.latte, i, pkg()).available).toBe(false);
-    expect(productAvailability(PRODUCT_MAP.croissant, i, pkg()).available).toBe(true);
+    expect(productAvailability(PRODUCT_MAP["bottled-water"], i, pkg()).available).toBe(true);
     const r = getReadiness(idle, i);
     expect(r.canBrew).toBe(false);
     expect(r.canOrder).toBe(true);
@@ -74,14 +74,14 @@ describe("inventory engine", () => {
 
 describe("order engine", () => {
   it("commits a multi-item order atomically and only once", () => {
-    const order = createPendingOrder(1, [line("latte", 2), line("mocha", 1), line("muffin", 1, null)], 0, "upi");
-    expect(order.total).toBe(159 * 2 + 189 + 110);
+    const order = createPendingOrder(1, [line("latte", 2), line("mocha", 1), line("bottled-water", 1, null)], 0, "upi");
+    expect(order.total).toBe(159 * 2 + 189 + 40);
     const r = processOrder({ order, inventory: inv(), packaged: pkg(), machineBlockers: [], paymentRef: "X", now: 1 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.inventory.cups.quantity).toBe(INITIAL_INVENTORY.cups.quantity - 3);
     expect(r.inventory.milk.quantity).toBe(INITIAL_INVENTORY.milk.quantity - 510);
-    expect(r.packaged.muffin.quantity).toBe(INITIAL_PACKAGED.muffin.quantity - 1);
+    expect(r.packaged["bottled-water"].quantity).toBe(INITIAL_PACKAGED["bottled-water"].quantity - 1);
     // Re-processing the committed order is refused.
     const again = processOrder({ order: r.order, inventory: r.inventory, packaged: r.packaged, machineBlockers: [], paymentRef: "X", now: 2 });
     expect(again.ok).toBe(false);
@@ -108,9 +108,9 @@ describe("order engine", () => {
 
 describe("machine engine", () => {
   it("builds a staged plan with one queue entry per unit, drinks before packaged", () => {
-    const order = createPendingOrder(4, [line("cookies", 1, null), line("tea", 1, "regular")], 0, "upi");
+    const order = createPendingOrder(4, [line("bottled-water", 1, null), line("tea", 1, "regular")], 0, "upi");
     const { units, plan } = buildPlan(order);
-    expect(units.map((u) => u.productId)).toEqual(["tea", "cookies"]);
+    expect(units.map((u) => u.productId)).toEqual(["tea", "bottled-water"]);
     expect(plan[0].state).toBe("ORDER_RECEIVED");
     expect(plan[1].state).toBe("VALIDATING");
     expect(plan.some((s) => s.phase === "vend")).toBe(true);

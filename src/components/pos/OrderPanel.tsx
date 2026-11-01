@@ -62,7 +62,7 @@ export function OrderPanel({ onCheckout, className }: { onCheckout: () => void; 
             </div>
             <p className="text-[14px] font-medium text-ivory-dim">Your order is empty</p>
             <p className="max-w-[220px] text-[12.5px] leading-relaxed text-faint">
-              Tap any drink or snack to add it. Stock is only used once payment succeeds.
+              Tap any drink to add it. Stock is only used once payment succeeds.
             </p>
           </div>
         ) : (

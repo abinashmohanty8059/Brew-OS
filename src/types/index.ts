@@ -70,7 +70,7 @@ export interface DrinkVisual {
   accent: string;
 }
 
-export type PackagedIcon = "water" | "chocolate" | "cookie" | "croissant" | "muffin" | "sandwich";
+export type PackagedIcon = "water";
 
 export interface Faq {
   q: string;

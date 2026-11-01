@@ -50,7 +50,7 @@ export function CupDispenser() {
 
       <p className={cn("mt-3 text-[12px] leading-relaxed", status === "normal" ? "text-faint" : STATUS_STYLES[status].text)}>
         {status === "empty"
-          ? "Cup dispenser empty — drinks are disabled. Packaged items can still be sold."
+          ? "Cup dispenser empty — prepared drinks are disabled. Bottled water can still be sold."
           : status === "normal"
             ? `One cup per drink. Low-cup alert at ${cups.lowThreshold}.`
             : `Only ${cups.quantity} cups left — replenish soon.`}

@@ -24,11 +24,6 @@ export const INITIAL_INVENTORY: Inventory = {
 
 export const INITIAL_PACKAGED: PackagedInventory = {
   "bottled-water": { productId: "bottled-water", quantity: 18, capacity: 24, lowThreshold: 5 },
-  "chocolate-bar": { productId: "chocolate-bar", quantity: 12, capacity: 20, lowThreshold: 4 },
-  cookies: { productId: "cookies", quantity: 15, capacity: 20, lowThreshold: 4 },
-  croissant: { productId: "croissant", quantity: 8, capacity: 12, lowThreshold: 3 },
-  muffin: { productId: "muffin", quantity: 6, capacity: 12, lowThreshold: 3 },
-  sandwich: { productId: "sandwich", quantity: 4, capacity: 10, lowThreshold: 3 },
 };
 
 /** Display order for gauges. */

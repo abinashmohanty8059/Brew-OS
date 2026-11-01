@@ -43,7 +43,7 @@ function PosHero() {
           <dd className="mt-1.5 text-[13px]">
             <Signal
               tone={readiness.canBrew ? "lime" : readiness.canOrder ? "amber" : meta.tone}
-              label={readiness.canBrew ? "Ready" : readiness.canOrder ? "Snacks only" : meta.label}
+              label={readiness.canBrew ? "Ready" : readiness.canOrder ? "Bottled only" : meta.label}
               pulse={!readiness.canBrew}
             />
           </dd>

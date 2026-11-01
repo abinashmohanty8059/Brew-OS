@@ -34,7 +34,7 @@ export const CATEGORY_LABELS: Record<MenuCategory, string> = {
   specialty: "Specialty",
   cold: "Cold Bar",
   tea: "Tea & Cocoa",
-  pantry: "Pantry",
+  pantry: "Bottled",
 };
 
 export const CATEGORY_ORDER: MenuCategory[] = ["espresso", "black", "milk", "specialty", "cold", "tea", "pantry"];

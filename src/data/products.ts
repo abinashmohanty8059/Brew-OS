@@ -201,7 +201,8 @@ export const EXTRA_DRINKS: PreparedDrink[] = [
   }),
 ];
 
-/* Packaged items consume their own unit stock, never machine ingredients or cups. */
+/* Packaged drinks consume their own unit stock, never machine ingredients or cups.
+   The menu is drinks-only, so this is limited to bottled water. */
 function definePackaged(item: Omit<PackagedItem, "kind" | "listed">): PackagedItem {
   return { ...item, kind: "packaged_item", listed: true };
 }
@@ -217,61 +218,6 @@ export const PACKAGED_ITEMS: PackagedItem[] = [
     icon: "water",
     accent: "#84d4e6",
     unitLabel: "bottle",
-  }),
-  definePackaged({
-    id: "chocolate-bar",
-    name: "Chocolate Bar",
-    category: "pantry",
-    price: 60,
-    tagline: "54% dark, 40 g",
-    description: "Single-origin Idukki dark chocolate, 40 g bar.",
-    icon: "chocolate",
-    accent: "#9b5a35",
-    unitLabel: "bar",
-  }),
-  definePackaged({
-    id: "cookies",
-    name: "Oat Cookies",
-    category: "pantry",
-    price: 50,
-    tagline: "Oat & jaggery, pack of 2",
-    description: "Two crisp oat and jaggery cookies, baked locally.",
-    icon: "cookie",
-    accent: "#d2a064",
-    unitLabel: "pack",
-  }),
-  definePackaged({
-    id: "croissant",
-    name: "Butter Croissant",
-    category: "pantry",
-    price: 120,
-    tagline: "Laminated, all-butter",
-    description: "Flaky all-butter croissant, sealed fresh each morning.",
-    icon: "croissant",
-    accent: "#e2ab5c",
-    unitLabel: "piece",
-  }),
-  definePackaged({
-    id: "muffin",
-    name: "Blueberry Muffin",
-    category: "pantry",
-    price: 110,
-    tagline: "Soft crumb, real berries",
-    description: "Blueberry muffin with a crumble top.",
-    icon: "muffin",
-    accent: "#8c7bd6",
-    unitLabel: "piece",
-  }),
-  definePackaged({
-    id: "sandwich",
-    name: "Paneer Sandwich",
-    category: "pantry",
-    price: 160,
-    tagline: "Tikka paneer, mint chutney",
-    description: "Grilled paneer tikka sandwich on multigrain bread.",
-    icon: "sandwich",
-    accent: "#c7a25a",
-    unitLabel: "piece",
   }),
 ];
 
