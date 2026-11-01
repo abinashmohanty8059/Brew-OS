@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useBrewStore } from "@/store/machine-store";
 import { CLEANING } from "@/data/config";
-import { playSound } from "@/lib/sound";
 
 /**
  * The single clock for the machine. Mounted once at the app root so view
@@ -15,7 +14,6 @@ export function MachineDriver() {
   const cleaning = useBrewStore((s) => s.machine.cleaning);
   const state = useBrewStore((s) => s.machine.state);
   const speed = useBrewStore((s) => s.settings.speed);
-  const soundOn = useBrewStore((s) => s.settings.soundEnabled);
   const advancePrep = useBrewStore((s) => s.advancePrep);
   const advanceCleaning = useBrewStore((s) => s.advanceCleaning);
 
@@ -35,25 +33,6 @@ export function MachineDriver() {
     const id = window.setTimeout(() => advanceCleaning(cleaning.stageIndex), wait);
     return () => window.clearTimeout(id);
   }, [cleaning, state, speed, advanceCleaning]);
-
-  // Sound cues on state transitions (only when the user enabled sound).
-  const prev = useRef(state);
-  const prevPhase = useRef<string | undefined>(undefined);
-  const phase = prep && prep.stepIndex < prep.plan.length ? prep.plan[prep.stepIndex].phase : undefined;
-  useEffect(() => {
-    const before = prev.current;
-    const beforePhase = prevPhase.current;
-    prev.current = state;
-    prevPhase.current = phase;
-    if (!soundOn) return;
-    if (state !== before) {
-      if (state === "GRINDING" || (state === "BREWING" && before !== "GRINDING")) playSound("brew");
-      if (state === "COMPLETED") playSound("complete");
-      if (before === "CLEANING" && state === "IDLE") playSound("clean");
-      if (state === "ERROR") playSound("error");
-    }
-    if (phase === "pour" && beforePhase !== "pour") playSound("dispense");
-  }, [state, phase, soundOn]);
 
   return null;
 }

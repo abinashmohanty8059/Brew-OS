@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { stopSpeaking } from "@/lib/voice";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useBrewStore } from "@/store/machine-store";
 import { PosScreen } from "@/components/pos/PosScreen";
@@ -16,6 +17,8 @@ import { BrandMark, Wordmark } from "./BrandMark";
 import { StatusStrip } from "./StatusStrip";
 import { SystemNotifier } from "./SystemNotifier";
 import { TopBar } from "./TopBar";
+import { AudioDirector } from "./AudioDirector";
+import { WelcomeScreen } from "./WelcomeScreen";
 
 function BootScreen() {
   return (
@@ -50,6 +53,7 @@ const VIEW_MOTION = {
 
 export function BrewApp() {
   const [ready, setReady] = useState(false);
+  const [begun, setBegun] = useState(false);
   const view = useBrewStore((s) => s.view);
 
   // Hydrate persisted state on the client only, so the server render never
@@ -65,6 +69,7 @@ export function BrewApp() {
     });
     return () => {
       cancelled = true;
+      stopSpeaking();
     };
   }, []);
 
@@ -94,7 +99,9 @@ export function BrewApp() {
         </div>
         <StatusStrip />
       </div>
+      <AnimatePresence>{!begun && <WelcomeScreen key="welcome" onBegin={() => setBegun(true)} />}</AnimatePresence>
       <MachineDriver />
+      <AudioDirector />
       <SystemNotifier />
       <ReceiptDialog />
       <RestockDialog />

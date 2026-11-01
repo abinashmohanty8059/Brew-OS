@@ -31,15 +31,16 @@ To test failure paths, choose **Decline** at checkout, or lower stock from the O
 
 ## What's inside
 
-- **POS:** menu categories, seven signature coffees plus cold drinks, teas and packaged items. Quantity and sugar controls (0/5/10/15 g). A live "will use" preview. Prices formatted with `Intl.NumberFormat('en-IN')` in ₹.
-- **Inventory engine:** coffee, milk, water, sugar, chocolate, tea, masala, ice, cups and cleaning agent, each with a capacity, low/critical thresholds and a status (Normal / Low / Critical / Empty). Packaged items track unit stock and never use cups.
+- **POS:** a drinks-only menu: seven signature coffees, cold coffees, teas, hot chocolate and bottled water. Quantity and sugar controls (0/5/10/15 g). A live "will use" preview. Prices formatted with `Intl.NumberFormat('en-IN')` in ₹.
+- **Inventory engine:** coffee, milk, water, sugar, chocolate, tea, masala, ice, cups and cleaning agent, each with a capacity, low/critical thresholds and a status (Normal / Low / Critical / Empty). Bottled water tracks unit stock and never uses a cup.
 - **Transactional commit:** `processOrder()` validates the whole order (machine readiness, every ingredient, cups, packaged units), then deducts everything at once, or nothing.
 - **Machine:** a CSS/SVG machine with a display, brewing chamber, live ingredient meters, cup stack, nozzle stream, filling cup, collection slot and status LEDs. A typed state machine runs `IDLE → ORDER_RECEIVED → VALIDATING → GRINDING → BREWING → MIXING → DISPENSING → COMPLETED`, plus `CLEANING` and `ERROR`.
 - **Auto-clean:** five stages, with agent and water deducted once at start. Cancel stops the cycle without a refund (demo policy). Duplicate starts are refused.
 - **Operator dashboard:** KPIs, low-stock warnings, cup dispenser, restock dialog (quantity and alert threshold), revenue chart and table, transactions with receipts, event log, demo speed (1×/2×/4×), and a confirmed reset.
 - **BREW AI:** offline intent matching (normalize → synonyms → entities → intent), deterministic retrieval over a 33-document local corpus, and template-based answers filled with live state. Replies stream token by token.
 - **RAG Explorer:** the actual trace of each chat query. It shows normalization, intent scores, the top-3 documents with keyword/tag/intent/entity score breakdowns, highlighted passages, the assembled context, the template and its slots (knowledge vs live), and the final answer. A searchable corpus viewer is included.
-- **Sound:** optional synthesized Web Audio cues, off by default.
+- **Voice guide:** a spoken welcome, plus narration of every action (drink added or removed, sugar, category, checkout, payment), every machine stage while it prepares, every cleaning stage, and stock warnings. BREW AI answers are read aloud. It uses the browser's Web Speech API (no API key) and prefers an Indian-English voice. Browsers only allow audio after a click, so the welcome screen's **Tap to begin** starts it.
+- **Sound:** synthesized Web Audio effects: button taps, add/remove cues, and grinder, brewing, steam, pour, vend and rinse sounds timed to each stage. Voice and sound are on by default; toggle them in the top bar or choose *Continue without audio*.
 - **State:** a single Zustand store persisted to `localStorage`, hydrated on the client only.
 
 ## Demo policies

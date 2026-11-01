@@ -14,6 +14,7 @@ import { CategoryNav, RecentOrders } from "./CategoryNav";
 import { ProductGrid } from "./ProductGrid";
 import { OrderPanel } from "./OrderPanel";
 import { PaymentDialog } from "./PaymentDialog";
+import { announce } from "@/store/announce";
 
 function PosHero() {
   const machine = useBrewStore((s) => s.machine);
@@ -76,6 +77,7 @@ export function PosScreen() {
     setSheetOpen(false);
     setPaymentKey((k) => k + 1);
     setPaymentOpen(true);
+    announce(`Checkout. Your total is ${formatINR(totals.total)}. Choose UPI, card or cash, then press pay.`);
   };
 
   return (

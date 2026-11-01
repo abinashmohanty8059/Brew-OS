@@ -14,6 +14,8 @@ import { ProductArt } from "@/components/product/ProductArt";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { Button, IconButton } from "@/components/ui/Button";
 import { toast } from "@/components/ui/Toaster";
+import { announce } from "@/store/announce";
+import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/cn";
 
 export function OrderPanel({ onCheckout, className }: { onCheckout: () => void; className?: string }) {
@@ -36,8 +38,20 @@ export function OrderPanel({ onCheckout, className }: { onCheckout: () => void; 
   const consumption = computeConsumption(cart);
   const canPay = cart.length > 0 && problems.length === 0;
 
-  const report = (r: { ok: boolean; message: string; details?: string[] }) => {
-    if (!r.ok) toast("warning", r.message, r.details?.join(" "));
+  const report = (r: { ok: boolean; message: string; details?: string[] }, spoken?: string) => {
+    const soundOn = useBrewStore.getState().settings.soundEnabled;
+    if (!r.ok) {
+      toast("warning", r.message, r.details?.join(" "));
+      if (soundOn) playSound("error");
+      announce(`Sorry. ${r.message}.`);
+      return;
+    }
+    if (spoken) announce(spoken);
+  };
+  const removeNamed = (lineId: string, name: string) => {
+    removeLine(lineId);
+    if (useBrewStore.getState().settings.soundEnabled) playSound("remove");
+    announce(`${name} removed from your order.`);
   };
 
   return (
@@ -48,7 +62,15 @@ export function OrderPanel({ onCheckout, className }: { onCheckout: () => void; 
           <p className="mt-1 font-mono text-[13px] text-ivory-dim">{makeOrderId(orderSeq)}</p>
         </div>
         {cart.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearCart} icon={<Trash2 className="size-3.5" />}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              clearCart();
+              announce("Order cleared.");
+            }}
+            icon={<Trash2 className="size-3.5" />}
+          >
             Clear
           </Button>
         )}
@@ -105,7 +127,7 @@ export function OrderPanel({ onCheckout, className }: { onCheckout: () => void; 
                               type="button"
                               aria-pressed={line.sugar === level}
                               title={`${SUGAR_LABELS[level]} · ${SUGAR_GRAMS[level]} g`}
-                              onClick={() => report(setLineSugar(line.id, level))}
+                              onClick={() => report(setLineSugar(line.id, level), `${level === "none" ? "No sugar" : `${SUGAR_LABELS[level]} sugar`} for ${product.name}.`)}
                               className={cn(
                                 "rounded px-1.5 py-1 text-[10.5px] transition-colors",
                                 line.sugar === level ? "bg-white/10 text-ivory" : "text-faint hover:text-ivory-dim",
@@ -122,14 +144,14 @@ export function OrderPanel({ onCheckout, className }: { onCheckout: () => void; 
                         <IconButton
                           size="sm"
                           label={line.quantity === 1 ? `Remove ${product.name}` : `Decrease ${product.name}`}
-                          onClick={() => (line.quantity === 1 ? removeLine(line.id) : report(setQuantity(line.id, line.quantity - 1)))}
+                          onClick={() => (line.quantity === 1 ? removeNamed(line.id, product.name) : report(setQuantity(line.id, line.quantity - 1), `${product.name}, ${line.quantity - 1}.`))}
                         >
                           {line.quantity === 1 ? <Trash2 className="size-3" /> : <Minus className="size-3" />}
                         </IconButton>
                         <span className="tabular w-6 text-center text-[13px] font-medium" aria-live="polite">
                           {line.quantity}
                         </span>
-                        <IconButton size="sm" label={`Increase ${product.name}`} onClick={() => report(setQuantity(line.id, line.quantity + 1))}>
+                        <IconButton size="sm" label={`Increase ${product.name}`} onClick={() => report(setQuantity(line.id, line.quantity + 1), `${product.name}, ${line.quantity + 1}.`)}>
                           <Plus className="size-3" />
                         </IconButton>
                       </div>

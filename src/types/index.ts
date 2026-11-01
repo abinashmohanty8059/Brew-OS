@@ -264,5 +264,7 @@ export type AppView = "pos" | "machine" | "operator";
 
 export interface Settings {
   soundEnabled: boolean;
+  /** Spoken voice guide (Web Speech API). */
+  voiceEnabled: boolean;
   speed: 1 | 2 | 4;
 }

@@ -9,6 +9,7 @@ import { formatINR } from "@/lib/currency";
 import { ProductArt } from "@/components/product/ProductArt";
 import { toast } from "@/components/ui/Toaster";
 import { playSound } from "@/lib/sound";
+import { announce } from "@/store/announce";
 import { cn } from "@/lib/cn";
 
 const INGREDIENT_SHORT: Record<string, string> = {
@@ -57,9 +58,13 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
   const onAdd = () => {
     const result = addToCart(product.id);
     if (result.ok) {
-      if (soundOn) playSound("tap");
+      if (soundOn) playSound("add");
+      const qty = useBrewStore.getState().cart.filter((l) => l.productId === product.id).reduce((n, l) => n + l.quantity, 0);
+      announce(`${product.name} added.${qty > 1 ? ` ${qty} in your order.` : ` ${formatINR(product.price)}.`}`);
     } else {
+      if (soundOn) playSound("error");
       toast("warning", result.message, result.details?.join(" "));
+      announce(`Sorry. ${result.message}. ${result.details?.[0] ?? ""}`);
     }
   };
 

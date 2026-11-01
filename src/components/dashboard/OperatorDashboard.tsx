@@ -20,6 +20,7 @@ import { toast } from "@/components/ui/Toaster";
 import { InventorySidebar } from "@/components/inventory/InventorySidebar";
 import { CleaningMode } from "@/components/machine/CleaningMode";
 import { cn } from "@/lib/cn";
+import { announce } from "@/store/announce";
 import { ActivityLog } from "./ActivityLog";
 import { CupDispenser } from "./CupDispenser";
 import { OrderHistory } from "./OrderHistory";
@@ -116,7 +117,10 @@ function MachineControls() {
               type="button"
               role="radio"
               aria-checked={speed === s}
-              onClick={() => setSettings({ speed: s })}
+              onClick={() => {
+                setSettings({ speed: s });
+                announce(`Demo speed ${s} times.`);
+              }}
               className={cn("flex-1 rounded-md py-1 text-[12px]", speed === s ? "bg-white/10 text-ivory" : "text-faint hover:text-ivory-dim")}
             >
               {s}×
@@ -146,6 +150,7 @@ function MachineControls() {
               onClick={() => {
                 resetDemo();
                 setConfirmReset(false);
+                announce("Demo data reset. Inventory and orders are back to defaults.");
                 toast("success", "Demo reset", "Inventory, orders and revenue restored to defaults.");
               }}
             >

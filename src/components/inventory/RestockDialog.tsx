@@ -12,6 +12,7 @@ import { restockAmount } from "@/lib/inventory-engine";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { toast } from "@/components/ui/Toaster";
+import { announce } from "@/store/announce";
 
 const encode = (t: RestockTarget) => `${t.type}:${t.id}`;
 function decode(v: string): RestockTarget {
@@ -89,6 +90,7 @@ function RestockForm({ initial, onDone }: { initial: RestockTarget; onDone: () =
       setError(r.message);
       return;
     }
+    announce(`${r.message}. Now ${formatQty(r.result?.quantity ?? 0, unit)}.`);
     toast(
       "success",
       r.message,

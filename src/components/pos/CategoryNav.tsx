@@ -10,6 +10,7 @@ import { useUi } from "@/store/ui-store";
 import { formatINR, formatTime } from "@/lib/currency";
 import { ORDER_STATUS_LABELS } from "@/lib/order-engine";
 import { cn } from "@/lib/cn";
+import { announce } from "@/store/announce";
 
 const ICONS: Record<MenuCategory | "all", typeof Coffee> = {
   all: LayoutGrid,
@@ -44,7 +45,10 @@ export function CategoryNav({ orientation }: { orientation: "horizontal" | "vert
             <li key={c} className={cn(!vertical && "shrink-0")}>
               <button
                 type="button"
-                onClick={() => setCategory(c)}
+                onClick={() => {
+                  setCategory(c);
+                  announce(c === "all" ? "Showing all drinks." : `${CATEGORY_LABELS[c]}. ${count(c)} option${count(c) === 1 ? "" : "s"}.`);
+                }}
                 aria-pressed={active}
                 className={cn(
                   "relative flex w-full items-center gap-2.5 rounded-lg text-left text-[13px] transition-colors",

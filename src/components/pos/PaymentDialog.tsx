@@ -11,6 +11,8 @@ import { SUGAR_LABELS } from "@/data/config";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { playSound } from "@/lib/sound";
+import { announce } from "@/store/announce";
+import { spokenOrder } from "@/components/app/AudioDirector";
 import { cn } from "@/lib/cn";
 
 type Phase = "select" | "processing" | "approved" | "failed";
@@ -94,6 +96,7 @@ export function PaymentDialog({ open, onClose }: { open: boolean; onClose: () =>
     if (phase !== "select") return;
     const started = beginPayment(method);
     if (!started.ok || !started.orderId) {
+      announce(`Sorry. ${started.message}. ${started.details?.[0] ?? ""}`);
       setResult({ title: started.message, details: started.details ?? [] });
       setPhase("failed");
       return;
@@ -102,13 +105,16 @@ export function PaymentDialog({ open, onClose }: { open: boolean; onClose: () =>
     pendingOrder.current = orderId;
     setPaidTotal(totals.total);
     setPhase("processing");
+    announce(`Processing your ${METHODS.find((m) => m.id === method)?.label} payment of ${formatINR(totals.total)}. Please wait.`);
     timers.current.push(
       window.setTimeout(() => {
         const settled = settlePayment(orderId, outcome);
         pendingOrder.current = null;
         if (settled.ok) {
           setPhase("approved");
-          if (soundOn) playSound("complete");
+          if (soundOn) playSound("success");
+          const n = lines.reduce((sum, l) => sum + l.quantity, 0);
+          announce(`Payment approved. ${spokenOrder(orderId)} received, ${n} item${n === 1 ? "" : "s"} in the queue.`);
           timers.current.push(
             window.setTimeout(() => {
               onClose();
@@ -117,6 +123,7 @@ export function PaymentDialog({ open, onClose }: { open: boolean; onClose: () =>
           );
         } else {
           if (soundOn) playSound("error");
+          announce(`${settled.message}. No stock was used and nothing was charged.`);
           setResult({ title: settled.message, details: settled.details ?? [] });
           setPhase("failed");
         }
@@ -128,6 +135,7 @@ export function PaymentDialog({ open, onClose }: { open: boolean; onClose: () =>
     if (phase === "processing" || phase === "approved") return;
     if (phase === "failed") acknowledgeError();
     if (pendingOrder.current) cancelPayment(pendingOrder.current);
+    if (phase === "select") announce("Payment cancelled. Your order is still in the cart.");
     onClose();
   };
 
@@ -211,7 +219,10 @@ export function PaymentDialog({ open, onClose }: { open: boolean; onClose: () =>
                       type="button"
                       role="radio"
                       aria-checked={active}
-                      onClick={() => setMethod(m.id)}
+                      onClick={() => {
+                        setMethod(m.id);
+                        announce(`${m.label} selected. ${m.hint}.`);
+                      }}
                       className={cn(
                         "flex flex-col items-start gap-2 rounded-xl border p-3 text-left transition-colors",
                         active ? "border-lime/50 bg-lime/[0.06]" : "border-white/[0.07] hover:border-white/15",
@@ -262,7 +273,10 @@ export function PaymentDialog({ open, onClose }: { open: boolean; onClose: () =>
                       type="button"
                       role="radio"
                       aria-checked={outcome === o}
-                      onClick={() => setOutcome(o)}
+                      onClick={() => {
+                        setOutcome(o);
+                        announce(o === "approve" ? "Demo outcome: approve." : "Demo outcome: decline. The payment will fail.");
+                      }}
                       className={cn(
                         "flex-1 rounded-md py-1.5 text-[12.5px] transition-colors",
                         outcome === o ? (o === "approve" ? "bg-lime/15 text-lime" : "bg-danger/15 text-[#ff8a7f]") : "text-faint hover:text-ivory-dim",

@@ -1,13 +1,15 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Bot, Cpu, LayoutDashboard, Network, ShoppingBag, Volume2, VolumeX } from "lucide-react";
+import { Bot, Cpu, LayoutDashboard, Network, ShoppingBag, Speech, Volume2, VolumeX } from "lucide-react";
 import type { AppView } from "@/types";
 import { useBrewStore } from "@/store/machine-store";
 import { useUi } from "@/store/ui-store";
 import { MACHINE } from "@/data/config";
 import { STATE_META } from "@/lib/machine-engine";
 import { playSound } from "@/lib/sound";
+import { speak, stopSpeaking } from "@/lib/voice";
+import { announce } from "@/store/announce";
 import { Signal } from "@/components/ui/StatusIndicator";
 import { IconButton } from "@/components/ui/Button";
 import { BrandMark, Wordmark } from "./BrandMark";
@@ -31,10 +33,20 @@ export function TopBar() {
   const meta = STATE_META[machineState];
   const busy = machineState !== "IDLE" && machineState !== "COMPLETED";
 
+  const voiceOn = useBrewStore((s) => s.settings.voiceEnabled);
+
   const toggleSound = () => {
     const next = !soundOn;
     setSettings({ soundEnabled: next });
-    if (next) playSound("tap");
+    if (next) playSound("chime");
+    announce(next ? "Sound effects on." : "Sound effects off.");
+  };
+
+  const toggleVoice = () => {
+    const next = !voiceOn;
+    setSettings({ voiceEnabled: next });
+    if (next) speak("Voice guide on.");
+    else stopSpeaking();
   };
 
   return (
@@ -108,6 +120,9 @@ export function TopBar() {
           <span className="hidden sm:inline">RAG Explorer</span>
           <span className="sm:hidden">RAG</span>
         </button>
+        <IconButton label={voiceOn ? "Turn voice guide off" : "Turn voice guide on"} onClick={toggleVoice} active={voiceOn} aria-pressed={voiceOn}>
+          <Speech className="size-4" />
+        </IconButton>
         <IconButton label={soundOn ? "Mute sounds" : "Enable sounds"} onClick={toggleSound} active={soundOn} aria-pressed={soundOn}>
           {soundOn ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
         </IconButton>

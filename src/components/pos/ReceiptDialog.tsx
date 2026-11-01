@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { RotateCcw } from "lucide-react";
+import { announce } from "@/store/announce";
+import { spokenOrder } from "@/components/app/AudioDirector";
 import { useBrewStore } from "@/store/machine-store";
 import { useUi } from "@/store/ui-store";
 import { MACHINE, SUGAR_LABELS } from "@/data/config";
@@ -44,6 +47,12 @@ export function ReceiptDialog() {
   };
 
   const ok = order?.status === "completed";
+
+  useEffect(() => {
+    if (!orderId) return;
+    const o = useBrewStore.getState().orders.find((x) => x.id === orderId);
+    if (o) announce(`Receipt for ${spokenOrder(o.id)}. Total ${formatINR(o.total)}. ${ORDER_STATUS_LABELS[o.status]}.`);
+  }, [orderId]);
 
   return (
     <Dialog

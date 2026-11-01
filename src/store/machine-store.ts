@@ -132,7 +132,7 @@ function initialData(settings?: Settings): DataState {
     machine: initialMachine(),
     orderSeq: 1041,
     lastRejection: null,
-    settings: settings ?? { soundEnabled: false, speed: 1 },
+    settings: settings ?? { soundEnabled: true, voiceEnabled: true, speed: 1 },
     view: "pos",
   };
 }
@@ -514,7 +514,13 @@ export const useBrewStore = create<BrewStore>()(
     },
     {
       name: "brew-os-state",
-      version: 1,
+      version: 2,
+      // v2 turned sound and the voice guide on by default.
+      migrate: (persisted, version) => {
+        const p = (persisted ?? {}) as Partial<DataState>;
+        if (version < 2 && p.settings) p.settings = { ...p.settings, soundEnabled: true, voiceEnabled: true };
+        return p as BrewStore;
+      },
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       partialize: (s) => ({
