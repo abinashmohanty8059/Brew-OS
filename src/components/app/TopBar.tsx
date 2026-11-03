@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Bot, Cpu, LayoutDashboard, Network, ShoppingBag, Speech, Volume2, VolumeX } from "lucide-react";
+import { Bot, Cpu, LayoutDashboard, ShoppingBag, Speech, Volume2, VolumeX } from "lucide-react";
 import type { AppView } from "@/types";
 import { useBrewStore } from "@/store/machine-store";
 import { useUi } from "@/store/ui-store";
@@ -28,7 +28,7 @@ export function TopBar() {
   const machineState = useBrewStore((s) => s.machine.state);
   const soundOn = useBrewStore((s) => s.settings.soundEnabled);
   const setSettings = useBrewStore((s) => s.setSettings);
-  const setRagOpen = useUi((s) => s.setRagOpen);
+  // const setRagOpen = useUi((s) => s.setRagOpen);
   const setAssistantOpen = useUi((s) => s.setAssistantOpen);
   const meta = STATE_META[machineState];
   const busy = machineState !== "IDLE" && machineState !== "COMPLETED";
@@ -111,6 +111,7 @@ export function TopBar() {
           <Bot className="size-3.5 text-lime" aria-hidden />
           BREW AI
         </button>
+        {/* RAG Explorer button hidden for now
         <button
           type="button"
           onClick={() => setRagOpen(true)}
@@ -120,6 +121,7 @@ export function TopBar() {
           <span className="hidden sm:inline">RAG Explorer</span>
           <span className="sm:hidden">RAG</span>
         </button>
+        */}
         <IconButton label={voiceOn ? "Turn voice guide off" : "Turn voice guide on"} onClick={toggleVoice} active={voiceOn} aria-pressed={voiceOn}>
           <Speech className="size-4" />
         </IconButton>

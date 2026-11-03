@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import { Bot, Eraser, Network, SendHorizontal, X } from "lucide-react";
+import { Bot, Eraser, SendHorizontal, X } from "lucide-react";
 import { useBrewStore } from "@/store/machine-store";
-import { useUi } from "@/store/ui-store";
+// import { useUi } from "@/store/ui-store";
 import { SAMPLE_QUESTIONS } from "@/lib/assistant/knowledge-base";
 import { IconButton } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
@@ -27,7 +27,7 @@ export function BrewAssistant({ className, autoFocus = false, onClose }: { class
   const chat = useBrewStore((s) => s.chat);
   const ask = useBrewStore((s) => s.ask);
   const clearChat = useBrewStore((s) => s.clearChat);
-  const openRag = useUi((s) => s.openRag);
+  // const openRag = useUi((s) => s.openRag);
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLOListElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -77,9 +77,11 @@ export function BrewAssistant({ className, autoFocus = false, onClose }: { class
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          {/* RAG Explorer shortcut hidden for now
           <IconButton size="sm" label="Open RAG Explorer for the latest answer" onClick={() => openRag(null)}>
             <Network className="size-3.5" />
           </IconButton>
+          */}
           <IconButton size="sm" label="Clear chat" onClick={clearChat} disabled={chat.length === 0}>
             <Eraser className="size-3.5" />
           </IconButton>

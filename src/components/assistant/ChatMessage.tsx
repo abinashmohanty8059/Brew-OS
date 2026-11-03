@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { Network } from "lucide-react";
+// import { Network } from "lucide-react";
 import type { ChatMessage as Message } from "@/store/machine-store";
-import { useUi } from "@/store/ui-store";
+// import { useUi } from "@/store/ui-store";
 import { formatTime } from "@/lib/currency";
 import { RichText } from "@/components/ui/RichText";
 import { cn } from "@/lib/cn";
@@ -67,7 +67,7 @@ function useStreamedText(message: Message, onProgress?: () => void): { phase: "t
 }
 
 export function ChatMessage({ message, onStream }: { message: Message; onStream?: () => void }) {
-  const openRag = useUi((s) => s.openRag);
+  // const openRag = useUi((s) => s.openRag);
   const mine = message.role === "user";
   const { phase, text } = useStreamedText(message, onStream);
 
@@ -104,6 +104,7 @@ export function ChatMessage({ message, onStream }: { message: Message; onStream?
       {phase === "done" && (
         <div className="flex items-center gap-2 px-1 font-mono text-[10px] text-faint">
           <span>{formatTime(message.at)}</span>
+          {/* RAG trace link hidden for now
           {message.traceId && (
             <button
               type="button"
@@ -114,6 +115,7 @@ export function ChatMessage({ message, onStream }: { message: Message; onStream?
               Inspect trace
             </button>
           )}
+          */}
         </div>
       )}
     </motion.li>
