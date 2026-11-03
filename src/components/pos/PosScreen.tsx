@@ -15,8 +15,9 @@ import { ProductGrid } from "./ProductGrid";
 import { OrderPanel } from "./OrderPanel";
 import { PaymentDialog } from "./PaymentDialog";
 import { announce } from "@/store/announce";
+import { VoiceOrderButton } from "./VoiceOrderButton";
 
-function PosHero() {
+function PosHero({ onCheckout }: { onCheckout: () => void }) {
   const machine = useBrewStore((s) => s.machine);
   const inventory = useBrewStore((s) => s.inventory);
   const readiness = getReadiness(machine, inventory);
@@ -37,6 +38,9 @@ function PosHero() {
           Choose a drink, pay with a simulated UPI, card or cash flow, then watch the machine grind, brew and dispense it — with
           every gram and millilitre tracked.
         </p>
+        <div className="mt-5">
+          <VoiceOrderButton onCheckout={onCheckout} />
+        </div>
       </div>
       <dl className="relative grid shrink-0 grid-cols-3 gap-px overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.06] text-left">
         <div className="bg-ink-900/90 px-4 py-3">
@@ -77,7 +81,9 @@ export function PosScreen() {
     setSheetOpen(false);
     setPaymentKey((k) => k + 1);
     setPaymentOpen(true);
-    announce(`Checkout. Your total is ${formatINR(totals.total)}. Choose UPI, card or cash, then press pay.`);
+    // read the cart at call time: voice ordering adds items and checks out in one go
+    const total = orderTotals(buildOrderLines(useBrewStore.getState().cart)).total;
+    announce(`Checkout. Your total is ${formatINR(total)}. Choose UPI, card or cash, then press pay.`);
   };
 
   return (
@@ -91,7 +97,7 @@ export function PosScreen() {
       </aside>
 
       <main className="relative min-h-0 overflow-y-auto px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-10 lg:pt-6" id="menu">
-        <PosHero />
+        <PosHero onCheckout={openCheckout} />
         <div className="sticky top-0 z-10 -mx-4 mb-5 bg-ink-950/85 px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
           <CategoryNav orientation="horizontal" />
         </div>
