@@ -9,7 +9,9 @@ import { getProduct } from "@/data/products";
 import { parseVoiceOrder } from "@/lib/voice-order";
 import { startListening, speechInputSupported, type ListenStatus } from "@/lib/speech-input";
 import { playSound } from "@/lib/sound";
+import { stopSpeaking } from "@/lib/voice";
 import { announce } from "@/store/announce";
+import { endTour } from "@/store/welcome-tour";
 import { toast } from "@/components/ui/Toaster";
 import { cn } from "@/lib/cn";
 
@@ -27,7 +29,7 @@ function readPref(): boolean {
 
 const STATUS_TEXT: Record<ListenStatus, string> = {
   listening: "Listening — just say a drink",
-  paused: "Paused while the guide speaks",
+  paused: "Guide speaking — say “OK” to skip",
   blocked: "Microphone blocked",
   offline: "Mic unavailable",
   unsupported: "Voice needs Chrome or Edge",
@@ -63,6 +65,13 @@ export function VoiceOrderButton({ onCheckout }: { onCheckout: () => void }) {
         setLive("");
         setHeard(text);
         runCommand(text, true, () => checkoutRef.current());
+      },
+      onStopWord: () => {
+        // "OK" while the guide talks: stop the voice (and the welcome tour) and start ordering
+        endTour();
+        stopSpeaking();
+        setHeard("OK");
+        sound("tap");
       },
       onStatus: (next, message) => {
         setStatus(next);
