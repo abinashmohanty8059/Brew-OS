@@ -1,0 +1,95 @@
+/* Turns a spoken sentence into cart actions.
+   "coffee" -> 1 Americano, "two cappuccinos and a latte" -> 2 Cappuccino + 1 Latte,
+   "checkout" / "pay" -> open checkout, "clear my order" -> empty the cart.
+   Pure and synchronous so it can be unit tested without a microphone. */
+
+import { PRODUCT_ALIASES } from "@/lib/assistant/knowledge-base";
+import { getProduct } from "@/data/products";
+
+export interface VoiceItem {
+  productId: string;
+  quantity: number;
+  /** The words that matched, e.g. "coffee" — used to explain generic picks. */
+  heard: string;
+}
+
+export type VoiceCommand =
+  | { kind: "add"; items: VoiceItem[]; checkout: boolean }
+  | { kind: "checkout" }
+  | { kind: "clear" }
+  | { kind: "unknown"; text: string };
+
+/** Generic words people say at a counter, mapped to a sensible default drink. */
+const GENERIC_ALIASES: Record<string, string[]> = {
+  americano: ["coffee", "coffees", "black coffee", "hot coffee", "regular coffee", "normal coffee", "filter coffee", "kaapi", "kofi"],
+  latte: ["milk coffee", "white coffee"],
+  cappuccino: ["cappuccino coffee", "cap", "capu", "kapuchino", "cappuchino", "capuchino", "cappucchino", "capucchino"],
+  "hot-chocolate": ["chocolate"],
+  "bottled-water": ["water", "waters", "bottle of water"],
+  tea: ["teas", "cup of tea"],
+};
+
+const NUMBER_WORDS: Record<string, number> = {
+  a: 1, an: 1, one: 1, single: 1, two: 2, to: 2, too: 2, couple: 2, double: 2, three: 3, four: 4,
+  five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+};
+
+const CHECKOUT_WORDS = /\b(checkout|check out|pay|payment|place (the |my )?order|confirm|that'?s all|done|proceed)\b/;
+const CLEAR_WORDS = /\b(clear|cancel|empty|reset|remove everything|start over)\b/;
+
+/** Every alias -> product id, longest first so "cold coffee" wins over "coffee". */
+const ALIAS_TABLE: [string, string][] = (() => {
+  const rows: [string, string][] = [];
+  for (const source of [PRODUCT_ALIASES, GENERIC_ALIASES]) {
+    for (const [id, aliases] of Object.entries(source)) {
+      if (!getProduct(id)) continue;
+      for (const a of aliases) rows.push([a, id]);
+    }
+  }
+  return rows.sort((x, y) => y[0].length - x[0].length);
+})();
+
+export function normalizeSpeech(text: string): string {
+  return ` ${text.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim()} `;
+}
+
+/** Quantity spoken just before a match ("two", "2", "a couple of"). */
+function quantityBefore(prefix: string): number {
+  const words = prefix.trim().split(" ").filter((w) => w && w !== "of" && w !== "please" && w !== "cups" && w !== "cup");
+  const last = words[words.length - 1];
+  if (!last) return 1;
+  if (/^\d+$/.test(last)) return Math.min(10, Math.max(1, Number(last)));
+  return NUMBER_WORDS[last] ?? 1;
+}
+
+export function parseVoiceOrder(raw: string): VoiceCommand {
+  let text = normalizeSpeech(raw);
+  const found: (VoiceItem & { at: number })[] = [];
+
+  for (const [alias, id] of ALIAS_TABLE) {
+    const needle = ` ${alias} `;
+    let idx = text.indexOf(needle);
+    while (idx !== -1) {
+      found.push({ productId: id, quantity: quantityBefore(text.slice(0, idx + 1)), heard: alias, at: idx });
+      // consume the span so a shorter alias can't match inside it
+      text = text.slice(0, idx + 1) + " ".repeat(alias.length) + text.slice(idx + 1 + alias.length);
+      idx = text.indexOf(needle);
+    }
+  }
+
+  const checkout = CHECKOUT_WORDS.test(text);
+  if (found.length === 0) {
+    if (CLEAR_WORDS.test(text)) return { kind: "clear" };
+    if (checkout) return { kind: "checkout" };
+    return { kind: "unknown", text: raw.trim() };
+  }
+
+  // merge repeats ("a latte and another latte") in spoken order
+  const items: VoiceItem[] = [];
+  for (const f of found.sort((a, b) => a.at - b.at)) {
+    const same = items.find((i) => i.productId === f.productId);
+    if (same) same.quantity += f.quantity;
+    else items.push({ productId: f.productId, quantity: f.quantity, heard: f.heard });
+  }
+  return { kind: "add", items, checkout };
+}
