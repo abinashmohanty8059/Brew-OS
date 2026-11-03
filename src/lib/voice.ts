@@ -68,9 +68,25 @@ export function speak(text: string, { interrupt = true, rate = 1, pitch = 1.02 }
   }
   utterance.rate = rate;
   utterance.pitch = pitch;
+  const done = () => {
+    lastSpokeAt = Date.now();
+  };
+  utterance.onend = done;
+  utterance.onerror = done;
+  lastSpokeAt = Date.now();
   synth.speak(utterance);
 }
 
 export function stopSpeaking(): void {
   if (voiceSupported()) window.speechSynthesis.cancel();
+}
+
+let lastSpokeAt = 0;
+
+/** True while the voice guide is talking, and for a short tail after, so the
+    always-on microphone doesn't order the drinks the guide itself names. */
+export function guideIsTalking(tailMs = 800): boolean {
+  if (!voiceSupported()) return false;
+  const synth = window.speechSynthesis;
+  return synth.speaking || synth.pending || Date.now() - lastSpokeAt < tailMs;
 }
