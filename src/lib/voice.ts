@@ -54,10 +54,53 @@ export function forSpeech(text: string): string {
     .replace(/\*\*/g, "");
 }
 
+export interface SpeechStep {
+  text: string;
+  /** Fires when this line starts playing (used to scroll the menu in sync). */
+  onStart?: () => void;
+}
+
+/** Speaks several lines back to back. `onDone(finished)` runs once: true if all
+    lines played, false if they were cut off (e.g. the visitor said "OK"). */
+export function speakSequence(steps: SpeechStep[], onDone?: (finished: boolean) => void): void {
+  if (!voiceSupported() || steps.length === 0) {
+    onDone?.(false);
+    return;
+  }
+  window.speechSynthesis.cancel();
+  let settled = false;
+  const settle = (finished: boolean) => {
+    if (settled) return;
+    settled = true;
+    onDone?.(finished);
+  };
+  steps.forEach((step, i) => {
+    const u = utteranceFor(step.text);
+    const prevEnd = u.onend;
+    u.onstart = () => step.onStart?.();
+    u.onend = (e) => {
+      prevEnd?.call(u, e);
+      if (i === steps.length - 1) settle(true);
+    };
+    u.onerror = () => {
+      lastSpokeAt = Date.now();
+      settle(false);
+    };
+    window.speechSynthesis.speak(u);
+  });
+  lastSpokeAt = Date.now();
+}
+
 export function speak(text: string, { interrupt = true, rate = 1, pitch = 1.02 }: SpeakOptions = {}): void {
   if (!voiceSupported() || !text.trim()) return;
   const synth = window.speechSynthesis;
   if (interrupt) synth.cancel();
+  const utterance = utteranceFor(text, rate, pitch);
+  lastSpokeAt = Date.now();
+  synth.speak(utterance);
+}
+
+function utteranceFor(text: string, rate = 1, pitch = 1.02): SpeechSynthesisUtterance {
   const utterance = new SpeechSynthesisUtterance(forSpeech(text));
   const v = voice();
   if (v) {
@@ -73,8 +116,7 @@ export function speak(text: string, { interrupt = true, rate = 1, pitch = 1.02 }
   };
   utterance.onend = done;
   utterance.onerror = done;
-  lastSpokeAt = Date.now();
-  synth.speak(utterance);
+  return utterance;
 }
 
 export function stopSpeaking(): void {
