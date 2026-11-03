@@ -55,11 +55,25 @@ describe("parseVoiceOrder", () => {
     expect(add("e s p r e s").items[0].productId).toBe("espresso");
   });
 
-  it("does not fuzzy-match ordinary words", () => {
-    expect(parseVoiceOrder("the weather is lovely today").kind).toBe("unknown");
+  it("falls back to the single closest drink for anything else", () => {
+    const r = add("see you later");
+    expect(r.items).toHaveLength(1);
+    expect(r.items[0].productId).toBe("latte");
+    expect(add("the weather is lovely today").items).toHaveLength(1);
   });
 
-  it("returns unknown for unrelated speech", () => {
-    expect(parseVoiceOrder("what's the weather").kind).toBe("unknown");
+  it("never turns guide controls or commands into a drink", () => {
+    for (const t of ["ok", "okay", "skip", "stop", "thank you"]) expect(parseVoiceOrder(t).kind).toBe("unknown");
+    expect(parseVoiceOrder("checkout").kind).toBe("checkout");
+    expect(parseVoiceOrder("clear my order").kind).toBe("clear");
+  });
+
+  it("matches spoken words that are almost a drink name", () => {
+    expect(add("American").items).toEqual([{ productId: "americano", quantity: 1, heard: "american" }]);
+    expect(add("two americanos").items[0]).toMatchObject({ productId: "americano", quantity: 2 });
+    expect(add("cappuchinos").items[0].productId).toBe("cappuccino");
+    expect(add("machiatto").items[0].productId).toBe("macchiato");
+    expect(add("espressso").items[0].productId).toBe("espresso");
+    expect(add("flat whit").items[0].productId).toBe("flat-white");
   });
 });

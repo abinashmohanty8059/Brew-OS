@@ -85,21 +85,61 @@ const SOUND_ALIKE = ["bcdegptvz", "fsx", "mn", "ajk", "iy", "quw", "lr"];
 const GROUP = new Map<string, number>();
 SOUND_ALIKE.forEach((g, n) => [...g].forEach((ch) => GROUP.set(ch, n)));
 
-function letterScore(a: string, b: string): number {
+function letterScore(a: string, b: string, soundAlike: boolean): number {
   if (a === b) return 1;
+  if (!soundAlike) return 0;
   const ga = GROUP.get(a);
   return ga !== undefined && ga === GROUP.get(b) ? 0.8 : 0;
 }
 
-/** How alike two spellings are, 0..1: longest common (sound-alike) subsequence over the longer length. */
-export function spellingSimilarity(a: string, b: string): number {
+/** How alike two spellings are, 0..1: longest common subsequence over the longer length.
+    With `soundAlike`, letters that sound the same when spelled aloud count as near-matches. */
+export function spellingSimilarity(a: string, b: string, soundAlike = true): number {
   const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
-      dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1] + letterScore(a[i - 1], b[j - 1]));
+      dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1] + letterScore(a[i - 1], b[j - 1], soundAlike));
     }
   }
   return dp[a.length][b.length] / Math.max(a.length, b.length, 1);
+}
+
+/** Spoken words are fuzzy-matched much more strictly than spelled letters, because the
+    mic is always on: "american" -> americano passes, "later" -> latte does not. */
+export const WORD_THRESHOLD = 0.85;
+const MIN_FUZZY_LENGTH = 5;
+
+/** Share of letters needed for the last-resort match when no drink was named clearly.
+    Deliberately tiny (2%): almost anything said adds the closest drink. */
+export const LOOSE_THRESHOLD = 0.02;
+
+/** Words that are never treated as a drink: they control the voice guide or are filler. */
+const SKIP_WORDS = /^\s*(ok|okay|okey|skip|got it|enough|alright|all right|stop|yes|no|thanks|thank you)?\s*$/;
+const FILLER = new Set(["a", "an", "the", "i", "i'd", "i'll", "want", "like", "please", "give", "me", "get", "can", "have", "and", "one", "some", "of", "to", "for", "my"]);
+
+/** The closest drink to anything in the phrase, scored with sound-alike letters. */
+function loosestMatch(words: string[]): { alias: string; word: string } | null {
+  let best: { alias: string; word: string; score: number } | null = null;
+  for (const word of words) {
+    if (FILLER.has(word) || NUMBER_WORDS[word] !== undefined || /^\d+$/.test(word)) continue;
+    for (const [squashed, alias] of SQUASHED_ALIASES) {
+      const score = spellingSimilarity(word, squashed);
+      if (!best || score > best.score) best = { alias, word, score };
+    }
+  }
+  return best && best.score >= LOOSE_THRESHOLD ? best : null;
+}
+
+/** Near-miss word -> drink alias ("american" -> "americano", "cappucino" -> "cappuccino"). */
+function nearMissAlias(word: string): string | null {
+  if (word.length < MIN_FUZZY_LENGTH || NUMBER_WORDS[word] !== undefined) return null;
+  let best: { alias: string; score: number } | null = null;
+  for (const [squashed, alias] of SQUASHED_ALIASES) {
+    if (squashed.length < MIN_FUZZY_LENGTH) continue;
+    const score = spellingSimilarity(word, squashed, false);
+    if (!best || score > best.score) best = { alias, score };
+  }
+  return best && best.score >= WORD_THRESHOLD ? best.alias : null;
 }
 
 /** Minimum share of letters that must match for a spelled word to count as a drink. */
@@ -143,11 +183,36 @@ export function parseVoiceOrder(raw: string): VoiceCommand {
     }
   }
 
+  // second pass: words that are almost a drink name ("american", "cappucino"),
+  // single words first, then two-word pairs for names like "flat white"
+  const aliasId = new Map(ALIAS_TABLE);
+  const tokens = [...text.matchAll(/[a-z0-9']+/g)].map((m) => ({ word: m[0], at: m.index ?? 0 }));
+  const used = new Set<number>();
+  tokens.forEach((t, n) => {
+    const alias = nearMissAlias(t.word);
+    if (!alias) return;
+    used.add(n);
+    found.push({ productId: aliasId.get(alias)!, quantity: quantityBefore(text.slice(0, t.at)), heard: t.word, at: t.at });
+  });
+  tokens.forEach((t, n) => {
+    const next = tokens[n + 1];
+    if (!next || used.has(n) || used.has(n + 1)) return;
+    const alias = nearMissAlias(t.word + next.word);
+    if (!alias) return;
+    used.add(n).add(n + 1);
+    found.push({ productId: aliasId.get(alias)!, quantity: quantityBefore(text.slice(0, t.at)), heard: `${t.word} ${next.word}`, at: t.at });
+  });
+
   const checkout = CHECKOUT_WORDS.test(text);
   if (found.length === 0) {
     if (CLEAR_WORDS.test(text)) return { kind: "clear" };
     if (checkout) return { kind: "checkout" };
-    return { kind: "unknown", text: raw.trim() };
+    if (SKIP_WORDS.test(text)) return { kind: "unknown", text: raw.trim() };
+    // last resort: no drink was named clearly, so add the single closest one
+    const guess = loosestMatch(tokens.map((t) => t.word));
+    if (!guess) return { kind: "unknown", text: raw.trim() };
+    const at = tokens.find((t) => t.word === guess.word)?.at ?? 0;
+    found.push({ productId: aliasId.get(guess.alias)!, quantity: quantityBefore(text.slice(0, at)), heard: guess.word, at });
   }
 
   // merge repeats ("a latte and another latte") in spoken order
