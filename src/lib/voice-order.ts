@@ -70,10 +70,48 @@ function joinSpelledLetters(words: string[]): string[] {
     const withoutArticle = joined.startsWith("a") ? SQUASHED_ALIASES.get(joined.slice(1)) : undefined;
     if (known) out.push(known);
     else if (withoutArticle) out.push("a", withoutArticle);
-    else out.push(joined);
+    else {
+      // misheard letters ("p o s s e e" for "c o f f e e"): take the closest drink name
+      const guess = closestAlias(joined);
+      out.push(guess ?? joined);
+    }
     i = j;
   }
   return out;
+}
+
+/** Letters that sound alike when spelled aloud, so speech recognition mixes them up. */
+const SOUND_ALIKE = ["bcdegptvz", "fsx", "mn", "ajk", "iy", "quw", "lr"];
+const GROUP = new Map<string, number>();
+SOUND_ALIKE.forEach((g, n) => [...g].forEach((ch) => GROUP.set(ch, n)));
+
+function letterScore(a: string, b: string): number {
+  if (a === b) return 1;
+  const ga = GROUP.get(a);
+  return ga !== undefined && ga === GROUP.get(b) ? 0.8 : 0;
+}
+
+/** How alike two spellings are, 0..1: longest common (sound-alike) subsequence over the longer length. */
+export function spellingSimilarity(a: string, b: string): number {
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1] + letterScore(a[i - 1], b[j - 1]));
+    }
+  }
+  return dp[a.length][b.length] / Math.max(a.length, b.length, 1);
+}
+
+/** Minimum share of letters that must match for a spelled word to count as a drink. */
+export const SPELLING_THRESHOLD = 0.2;
+
+function closestAlias(spelled: string): string | null {
+  let best: { alias: string; score: number } | null = null;
+  for (const [squashed, alias] of SQUASHED_ALIASES) {
+    const score = spellingSimilarity(spelled, squashed);
+    if (!best || score > best.score) best = { alias, score };
+  }
+  return best && best.score >= SPELLING_THRESHOLD ? best.alias : null;
 }
 
 export function normalizeSpeech(text: string): string {

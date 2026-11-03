@@ -48,6 +48,17 @@ describe("parseVoiceOrder", () => {
     expect(add("h o t c h o c o l a t e").items[0].productId).toBe("hot-chocolate");
   });
 
+  it("matches misheard spelled letters to the closest drink", () => {
+    expect(add("p o s s e e").items[0].productId).toBe("americano"); // c-o-f-f-e-e
+    expect(add("l a d d e").items[0].productId).toBe("latte");
+    expect(add("m o k a").items[0].productId).toBe("mocha");
+    expect(add("e s p r e s").items[0].productId).toBe("espresso");
+  });
+
+  it("does not fuzzy-match ordinary words", () => {
+    expect(parseVoiceOrder("the weather is lovely today").kind).toBe("unknown");
+  });
+
   it("returns unknown for unrelated speech", () => {
     expect(parseVoiceOrder("what's the weather").kind).toBe("unknown");
   });
