@@ -16,6 +16,8 @@ interface UiState {
   orderSheetOpen: boolean;
   /** Visitor has passed the welcome screen (audio and mic may start). */
   begun: boolean;
+  /** The spoken welcome tour is playing (say "OK" to skip). */
+  touring: boolean;
   setCategory: (c: MenuCategory | "all") => void;
   openReceipt: (orderId: string) => void;
   closeReceipt: () => void;
@@ -26,6 +28,7 @@ interface UiState {
   setAssistantOpen: (open: boolean) => void;
   setOrderSheetOpen: (open: boolean) => void;
   setBegun: (begun: boolean) => void;
+  setTouring: (touring: boolean) => void;
 }
 
 export const useUi = create<UiState>((set) => ({
@@ -37,6 +40,7 @@ export const useUi = create<UiState>((set) => ({
   assistantOpen: false,
   orderSheetOpen: false,
   begun: false,
+  touring: false,
   setCategory: (category) => set({ category }),
   openReceipt: (receiptOrderId) => set({ receiptOrderId }),
   closeReceipt: () => set({ receiptOrderId: null }),
@@ -47,4 +51,5 @@ export const useUi = create<UiState>((set) => ({
   setAssistantOpen: (assistantOpen) => set({ assistantOpen }),
   setOrderSheetOpen: (orderSheetOpen) => set({ orderSheetOpen }),
   setBegun: (begun) => set({ begun }),
+  setTouring: (touring) => set({ touring }),
 }));

@@ -3,10 +3,10 @@
 import { motion } from "motion/react";
 import { AudioLines, Hand, VolumeX } from "lucide-react";
 import { useBrewStore } from "@/store/machine-store";
-import { welcomeScript } from "@/store/announce";
+import { startWelcomeTour } from "@/store/welcome-tour";
 import { MACHINE } from "@/data/config";
 import { playSound, unlockAudio } from "@/lib/sound";
-import { speak, voiceSupported } from "@/lib/voice";
+import { voiceSupported } from "@/lib/voice";
 import { BrandMark, Wordmark } from "./BrandMark";
 
 /**
@@ -23,7 +23,7 @@ export function WelcomeScreen({ onBegin }: { onBegin: () => void }) {
     if (!withAudio) setSettings({ voiceEnabled: false, soundEnabled: false });
     else {
       if (settings.soundEnabled) playSound("chime");
-      if (settings.voiceEnabled) speak(welcomeScript());
+      if (settings.voiceEnabled) startWelcomeTour();
     }
     onBegin();
   };
