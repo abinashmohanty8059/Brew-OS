@@ -14,6 +14,8 @@ interface UiState {
   ragTraceId: string | null;
   assistantOpen: boolean;
   orderSheetOpen: boolean;
+  /** Visitor has passed the welcome screen (audio and mic may start). */
+  begun: boolean;
   setCategory: (c: MenuCategory | "all") => void;
   openReceipt: (orderId: string) => void;
   closeReceipt: () => void;
@@ -23,6 +25,7 @@ interface UiState {
   openRag: (traceId?: string | null) => void;
   setAssistantOpen: (open: boolean) => void;
   setOrderSheetOpen: (open: boolean) => void;
+  setBegun: (begun: boolean) => void;
 }
 
 export const useUi = create<UiState>((set) => ({
@@ -33,6 +36,7 @@ export const useUi = create<UiState>((set) => ({
   ragTraceId: null,
   assistantOpen: false,
   orderSheetOpen: false,
+  begun: false,
   setCategory: (category) => set({ category }),
   openReceipt: (receiptOrderId) => set({ receiptOrderId }),
   closeReceipt: () => set({ receiptOrderId: null }),
@@ -42,4 +46,5 @@ export const useUi = create<UiState>((set) => ({
   openRag: (ragTraceId = null) => set({ ragOpen: true, ragTraceId }),
   setAssistantOpen: (assistantOpen) => set({ assistantOpen }),
   setOrderSheetOpen: (orderSheetOpen) => set({ orderSheetOpen }),
+  setBegun: (begun) => set({ begun }),
 }));

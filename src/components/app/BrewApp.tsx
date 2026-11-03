@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { stopSpeaking } from "@/lib/voice";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useBrewStore } from "@/store/machine-store";
+import { useUi } from "@/store/ui-store";
 import { PosScreen } from "@/components/pos/PosScreen";
 import { ReceiptDialog } from "@/components/pos/ReceiptDialog";
 import { MachineView } from "@/components/machine/MachineView";
@@ -53,7 +54,8 @@ const VIEW_MOTION = {
 
 export function BrewApp() {
   const [ready, setReady] = useState(false);
-  const [begun, setBegun] = useState(false);
+  const begun = useUi((st) => st.begun);
+  const setBegun = useUi((st) => st.setBegun);
   const view = useBrewStore((s) => s.view);
 
   // Hydrate persisted state on the client only, so the server render never
