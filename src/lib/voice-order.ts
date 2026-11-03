@@ -49,8 +49,36 @@ const ALIAS_TABLE: [string, string][] = (() => {
   return rows.sort((x, y) => y[0].length - x[0].length);
 })();
 
+/** Aliases with spaces removed ("flatwhite", "hotchocolate") -> the spoken alias. */
+const SQUASHED_ALIASES = new Map(ALIAS_TABLE.map(([alias]) => [alias.replace(/ /g, ""), alias]));
+
+/** Joins a drink spelled out letter by letter: "l a t t e" -> "latte",
+    "a l a t t e" -> "a latte", "h o t c h o c o l a t e" -> "hot chocolate". */
+function joinSpelledLetters(words: string[]): string[] {
+  const out: string[] = [];
+  let i = 0;
+  while (i < words.length) {
+    let j = i;
+    while (j < words.length && /^[a-z]$/.test(words[j])) j++;
+    if (j - i < 3) {
+      out.push(words[i]);
+      i++;
+      continue;
+    }
+    const joined = words.slice(i, j).join("");
+    const known = SQUASHED_ALIASES.get(joined);
+    const withoutArticle = joined.startsWith("a") ? SQUASHED_ALIASES.get(joined.slice(1)) : undefined;
+    if (known) out.push(known);
+    else if (withoutArticle) out.push("a", withoutArticle);
+    else out.push(joined);
+    i = j;
+  }
+  return out;
+}
+
 export function normalizeSpeech(text: string): string {
-  return ` ${text.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim()} `;
+  const words = text.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").split(" ").filter(Boolean);
+  return ` ${joinSpelledLetters(words).join(" ")} `;
 }
 
 /** Quantity spoken just before a match ("two", "2", "a couple of"). */

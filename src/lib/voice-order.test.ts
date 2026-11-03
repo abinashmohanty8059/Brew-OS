@@ -38,6 +38,16 @@ describe("parseVoiceOrder", () => {
     expect(parseVoiceOrder("clear my order").kind).toBe("clear");
   });
 
+  it("understands a drink spelled letter by letter", () => {
+    expect(add("l a t t e").items).toEqual([{ productId: "latte", quantity: 1, heard: "latte" }]);
+    expect(add("L. A. T. T. E.").items[0].productId).toBe("latte");
+    expect(add("a l a t t e").items[0].productId).toBe("latte");
+    expect(add("two m o c h a").items[0]).toMatchObject({ productId: "mocha", quantity: 2 });
+    expect(add("c a p p u c c i n o").items[0].productId).toBe("cappuccino");
+    expect(add("f l a t w h i t e").items[0].productId).toBe("flat-white");
+    expect(add("h o t c h o c o l a t e").items[0].productId).toBe("hot-chocolate");
+  });
+
   it("returns unknown for unrelated speech", () => {
     expect(parseVoiceOrder("what's the weather").kind).toBe("unknown");
   });
