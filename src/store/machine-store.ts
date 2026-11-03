@@ -536,7 +536,7 @@ export const useBrewStore = create<BrewStore>()(
         orderSeq: s.orderSeq,
         lastRejection: s.lastRejection,
         settings: s.settings,
-        view: s.view,
+        // the current screen is not saved: the app always opens on the menu
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<DataState>;
@@ -552,6 +552,7 @@ export const useBrewStore = create<BrewStore>()(
           inventory: { ...current.inventory, ...(p.inventory ?? {}) },
           packaged,
           settings: { ...current.settings, ...(p.settings ?? {}) },
+          view: "pos", // older saves stored the screen; always start on the menu
         };
       },
     },
