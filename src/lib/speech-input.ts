@@ -40,14 +40,19 @@ export interface ListenHandlers {
 }
 
 const ERRORS: Record<string, string> = {
-  "not-allowed": "Microphone permission was denied",
-  "service-not-allowed": "Microphone permission was denied",
-  "no-speech": "I didn't hear anything",
+  "not-allowed": "Microphone is blocked — click the mic icon in the address bar and allow it",
+  "service-not-allowed": "Microphone is blocked — click the mic icon in the address bar and allow it",
+  "no-speech": "I didn't hear anything — check your microphone and speak right after tapping",
   "audio-capture": "No microphone was found",
   network: "Speech recognition needs an internet connection",
 };
 
-/** Starts one listening session. Returns a function that stops it. */
+/** Stop this long after the last word was heard. */
+const SILENCE_MS = 1400;
+/** Never listen longer than this. */
+const MAX_MS = 10000;
+
+/** Starts one listening session. Returns a function that stops it (and still uses what was heard). */
 export function listenOnce(handlers: ListenHandlers): () => void {
   const Ctor = ctor();
   if (!Ctor) {
@@ -58,31 +63,52 @@ export function listenOnce(handlers: ListenHandlers): () => void {
   const rec = new Ctor();
   rec.lang = "en-IN";
   rec.interimResults = true;
-  rec.continuous = false;
+  rec.continuous = true; // keep the mic open through short pauses; we stop it ourselves
   rec.maxAlternatives = 1;
 
   let finalText = "";
+  let interimText = "";
+  let errored = false;
+  let done = false;
+  let silenceTimer = 0;
+  const maxTimer = window.setTimeout(() => rec.stop(), MAX_MS);
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    window.clearTimeout(silenceTimer);
+    window.clearTimeout(maxTimer);
+    // Chrome often ends (especially on a manual stop) with words still marked interim — use them.
+    const text = (finalText + " " + interimText).trim();
+    if (text) handlers.onFinal(text);
+    else if (!errored) handlers.onError?.(ERRORS["no-speech"]);
+    handlers.onEnd?.();
+  };
+
   rec.onresult = (e) => {
     let interim = "";
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i];
-      if (r.isFinal) finalText += r[0].transcript;
+      if (r.isFinal) finalText += " " + r[0].transcript;
       else interim += r[0].transcript;
     }
-    handlers.onInterim?.((finalText + interim).trim());
+    interimText = interim;
+    handlers.onInterim?.((finalText + " " + interimText).trim());
+    window.clearTimeout(silenceTimer);
+    silenceTimer = window.setTimeout(() => rec.stop(), SILENCE_MS);
   };
   rec.onerror = (e) => {
-    if (e.error !== "aborted") handlers.onError?.(ERRORS[e.error] ?? `Voice input failed (${e.error})`);
+    if (e.error === "aborted") return;
+    errored = true;
+    handlers.onError?.(ERRORS[e.error] ?? `Voice input failed (${e.error})`);
   };
-  rec.onend = () => {
-    if (finalText.trim()) handlers.onFinal(finalText.trim());
-    handlers.onEnd?.();
-  };
+  rec.onend = finish;
   try {
     rec.start();
   } catch {
-    handlers.onError?.("Microphone is busy");
-    handlers.onEnd?.();
+    errored = true;
+    handlers.onError?.("Microphone is busy — try again");
+    finish();
   }
   return () => rec.stop();
 }
